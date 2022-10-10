@@ -26,15 +26,9 @@ rng(rand_seed)
 %% Set up supervisor data and timing-related information.
 
 supervisor_time_multiplier = 10; %factor by which we time-dilate the data
-% num_supervisor_runs_in_simulation = 100; %number of times to repeat the data
-% 100 times works better but takes over 3 hours to run.
-% To make sure it runs on your computer, start with 10.
 num_supervisor_runs_in_simulation = 10; %number of times to repeat the data
-% To avoid any legal or patient privacy concerns with releasing HCP data,
-% I am generating an artificial fMRI time series.
-% It is in the same format and qualitatively similar to the real ones.
-subject_id = 'nobody';
-S = load( sprintf('data\\%s_ROI_ts.mat',subject_id) );
+subject_id = '100206';
+S = load( sprintf('E:\\HCP_data\\fMRI\\%s_ROI_ts.mat',subject_id) );
 % Select the first time series in the file.
 % Each time series has fMRI channels in rows, time steps in columns.
 ts_index = 1;
@@ -42,16 +36,23 @@ supervisor_data = rescale_data_time_series(S.ROI_ts{ts_index},supervisor_time_mu
 [num_data_dims,num_supervisor_steps] = size(supervisor_data);
 
 dt = 0.04; %Euler integration step size 
+N = 1000; %number of neurons
 num_simulation_steps = num_supervisor_runs_in_simulation*num_supervisor_steps; %number of steps in the whole simulation
 % simulation_time = dt*num_simulation_steps; %amount of time to simulate in all
 supervisor_start_times = dt*(1:num_supervisor_steps:num_simulation_steps);
 
 % For the demo, run the supervisor once before and once after training.
 % That leaves 8 runs in between on which we train.
-rls_start_step = 0.05*num_simulation_steps; %First step to start RLS/FORCE method
+rls_start_step = round(0.05*num_simulation_steps); %First step to start RLS/FORCE method
 rls_start_time = dt*rls_start_step;
-rls_stop_step = 0.95*num_simulation_steps; %Last step to start RLS/FORCE method
+rls_stop_step = round(0.95*num_simulation_steps); %Last step to start RLS/FORCE method
 rls_stop_time = dt*rls_stop_step;
+% Since the discontinuity where we restart the supervisor
+% does not reflect the dynamics of the system,
+% we do not want the network to learn it.
+% Stop updating the output weights for a few steps after every restart.
+steps_to_stop_rls_after_restart = round(0.01*num_supervisor_steps);
+time_to_stop_rls_after_restart = dt*steps_to_stop_rls_after_restart;
 
 steps_between_BPhi1_updates = 1;
 % num_printouts = 20;
@@ -64,51 +65,7 @@ supervisor_hdts = generate_sinusoid_hdts(num_hdts_dims,num_supervisor_steps);
 
 %% Set the Izhikevich model parameters.
 
-%Bias, at the rheobase current.
-vr = -60;
-vpeak = 30;
-iz_scalar_consts = struct( ...
-    'dt', dt, ...
-    'tr', 2, ...
-    'td', 20, ...
-    'a', 0.002, ...
-    'b', 0, ...
-    'C', 250, ...
-    'd', 100, ...
-    'ff', 2.5, ...
-    'vt', -40, ...
-    'vr', vr, ...
-    'vpeak', vpeak, ...
-    'vreset', -65, ...
-    'Er', 0, ...
-    'BIAS', 1000 );
-% OMEGA: Random weight matrix
-% E1: Rank-nchord perturbation
-% E2: weights of z2 input
-N =  1000; %number of neurons
-p = 0.1;
-G = 5*10^3;
-Q = 4*10^2;
-WE2 = 4*10^3;
-iz_matrix_consts = struct( ...
-    'OMEGA', G*(randn(N,N)).*(rand(N,N)<p)/(p*sqrt(N)), ...
-    'E1', (2*rand(N,num_data_dims)-1)*Q, ... 
-    'E2', (2*rand(N,num_hdts_dims)-1)*WE2 );
-
-%%  Initialize post synaptic currents, and voltages.
-
-iz_state = struct( ...
-    'v', vr+(vpeak-vr)*rand(N,1), ...
-    'u', zeros(N,1), ...
-    'IPSC', zeros(N,1), ...
-    'h', zeros(N,1), ...
-    'r', zeros(N,1), ...
-    'hr', zeros(N,1), ...
-    'JD', zeros(N,1), ...
-    'BPhi1', zeros(N,num_data_dims), ...
-    'Pinv1', eye(N)*2, ...
-    'z1', zeros(num_data_dims,1), ...
-    'is_spike', false(N,1));
+[iz_scalar_consts,iz_matrix_consts,iz_state] = define_iz_neural_network(num_data_dims,num_hdts_dims,'dt',dt,'N',N);
 
 %% Set up variables in which to store information during the simulation.
 
@@ -119,7 +76,7 @@ recorded_spikes = false(num_simulation_steps,N);
 % recorded_output_layer_weights = zeros( num_simulation_steps, numel(weight_indices_to_plot) ); %Store some decoders %
 delta_weight_quantiles = [0 0.25 0.5 0.75 1.0];
 num_delta_weight_quantiles = numel(delta_weight_quantiles);
-recorded_delta_weight_quantiles = zeros( num_simulation_steps, num_delta_weight_quantiles );
+recorded_abs_delta_weight_quantiles = zeros( num_simulation_steps, num_delta_weight_quantiles );
 
 %% Run the simulation.
 zeros_for_quantiles = zeros( size(delta_weight_quantiles) );
@@ -129,17 +86,17 @@ last_printout_time = -Inf;
 for step_index=1:num_simulation_steps
     supervisor_step_index = mod(step_index-1,num_supervisor_steps)+1;
 
-    iz_state = update_iz_neurons(iz_state,iz_matrix_consts,iz_scalar_consts,supervisor_hdts(:,supervisor_step_index));
+    iz_state = update_iz_neurons( iz_state, iz_matrix_consts, iz_scalar_consts, supervisor_hdts(:,supervisor_step_index) );
     recorded_spikes(step_index,:) = iz_state.is_spike;
     iz_state.err = iz_state.z1 - supervisor_data(:,supervisor_step_index);
-    if (step_index >= rls_start_step) && (step_index < rls_stop_step) && ( mod(step_index,steps_between_BPhi1_updates) == 0 )
+    if (step_index >= rls_start_step) && (step_index < rls_stop_step) && (supervisor_step_index > steps_to_stop_rls_after_restart) && ( mod(step_index,steps_between_BPhi1_updates) == 0 )
         old_BPhi1 = iz_state.BPhi1;
         iz_state = rls_update(iz_state);
         last_BPhi1_update_step = step_index;
-        delta_BPhi1 = iz_state.BPhi1 - old_BPhi1;
-        recorded_delta_weight_quantiles(step_index,:) = quantile(delta_BPhi1,delta_weight_quantiles,'all');
+        abs_delta_BPhi1 = abs(iz_state.BPhi1 - old_BPhi1);
+        recorded_abs_delta_weight_quantiles(step_index,:) = quantile(abs_delta_BPhi1,delta_weight_quantiles,'all');
     else
-        recorded_delta_weight_quantiles(step_index,:) = zeros_for_quantiles;
+        recorded_abs_delta_weight_quantiles(step_index,:) = zeros_for_quantiles;
     end
     % recorded_output_layer_weights(step_index,weight_indices_to_plot)=iz_state.BPhi1(weight_indices_to_plot);
     recorded_output(step_index,:) = iz_state.z1';
@@ -159,7 +116,7 @@ end
 plot_file_suffix = sprintf('iz_model_v1_on_subject_%s_ts_%u_dilated_%u_repeated_%u_hdts_%u_seed_%u', ...
     subject_id,ts_index,supervisor_time_multiplier,num_supervisor_runs_in_simulation,num_hdts_dims,rand_seed);
 
-num_plot_points = 100;
+num_plot_points = 100;% num_simulation_steps;
 steps_between_plot_points = round(num_simulation_steps/num_plot_points);
 plot_indices = 1:steps_between_plot_points:num_simulation_steps;
 plot_times = dt*plot_indices;
@@ -232,7 +189,7 @@ for quantile_index = 1:num_delta_weight_quantiles
     delta_weight_quantile_legend{quantile_index} = sprintf( '%g-th percentile', 100*delta_weight_quantiles(quantile_index) );
 end
 f = figure('Position',[0 0 1000 500]);
-plot( plot_times, recorded_delta_weight_quantiles(plot_indices,:) )
+plot( plot_times, recorded_abs_delta_weight_quantiles(plot_indices,:) )
 legend(delta_weight_quantile_legend,'Location','northeastoutside')
 xlabel('Time (ms)')
 ylabel('percentile of changes output weights')
