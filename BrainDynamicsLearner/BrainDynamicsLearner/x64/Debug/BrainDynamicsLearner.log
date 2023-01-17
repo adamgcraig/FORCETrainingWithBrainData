@@ -1,0 +1,118 @@
+﻿  BDIzhikevichNeuron.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\numeric(138,26): warning C4244: '=': conversion from '_Ty2' to '_Ty', possible loss of data
+          with
+          [
+              _Ty2=double
+          ]
+          and
+          [
+              _Ty=int
+          ]
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\numeric(146): message : see reference to function template instantiation '_Ty std::inner_product<_InIt1,_InIt2,int,std::plus<void>,std::multiplies<void>>(_InIt1,_InIt1,_InIt2,_Ty,_BinOp1,_BinOp2)' being compiled
+          with
+          [
+              _Ty=int,
+              _InIt1=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<bdi_real_t>>>,
+              _InIt2=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<bdi_real_t>>>,
+              _BinOp1=std::plus<void>,
+              _BinOp2=std::multiplies<void>
+          ]
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\BrainDynamicsLearner\BDIzhikevichNeuron.cpp(43): message : see reference to function template instantiation '_Ty std::inner_product<std::_Vector_iterator<std::_Vector_val<std::_Simple_types<double>>>,std::_Vector_iterator<std::_Vector_val<std::_Simple_types<double>>>,int>(const _InIt1,const _InIt1,const _InIt2,_Ty)' being compiled
+          with
+          [
+              _Ty=int,
+              _InIt1=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<bdi_real_t>>>,
+              _InIt2=std::_Vector_iterator<std::_Vector_val<std::_Simple_types<bdi_real_t>>>
+          ]
+  BDMatrix.cpp
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(18,14): error C3856: 'traits': symbol is not a class template
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(18,15): error C2146: syntax error: missing ';' before identifier 'Matrix'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(18,21): error C2143: syntax error: missing ';' before '<'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(18,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(19,1): error C2143: syntax error: missing ';' before '{'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(19,1): error C2447: '{': missing function header (old-style formal list?)
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(179,27): error C2143: syntax error: missing ',' before '<'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(449): message : see reference to class template instantiation 'Eigen::Matrix<_Scalar,_Rows,_Cols,_Options,_MaxRows,_MaxCols>' being compiled
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(185,28): error C2143: syntax error: missing ';' before '<'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(185,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(185,1): error C2238: unexpected token(s) preceding ';'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,22): error C2653: 'Base': is not a class or namespace name
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,5): error C2144: syntax error: 'int' should be preceded by ';'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,1): warning C4183: 'EIGEN_DENSE_PUBLIC_INTERFACE': missing return type; assumed to be a member function returning 'int'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,40): error C3646: 'PlainObject': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(193,11): error C2653: 'Base': is not a class or namespace name
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(194,11): error C2653: 'Base': is not a class or namespace name
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(205,5): error C3646: 'EIGEN_STRONG_INLINE': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(205,25): error C3646: 'Matrix': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(205,31): error C2143: syntax error: missing ';' before '&'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(205,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(206,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(222,5): error C2061: syntax error: identifier 'EIGEN_STRONG_INLINE'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(223,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(235,5): error C2061: syntax error: identifier 'EIGEN_STRONG_INLINE'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(236,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(242,5): error C2061: syntax error: identifier 'EIGEN_STRONG_INLINE'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(243,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(257,23): error C3646: 'EIGEN_STRONG_INLINE': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(258,5): error C3646: 'Matrix': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(258,11): error C2988: unrecognizable template declaration/definition
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(258,11): error C2059: syntax error: '('
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(258,1): error C2334: unexpected token(s) preceding ':'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(449,1): fatal error C1903: unable to recover from previous error(s); stopping compilation
+  BDNeuron.cpp
+  BDReservoirComputer.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.32.31326\include\random(2865,5): error C2338: static_assert failed: 'invalid template argument for normal_distribution: N4659 29.6.1.1 [rand.req.genl]/1d requires one of float, double, or long double'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\BrainDynamicsLearner\BDReservoirComputer.cpp(13): message : see reference to class template instantiation 'std::normal_distribution<bdrc_size_t>' being compiled
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\BrainDynamicsLearner\BDReservoirComputer.cpp(13,67): warning C4244: 'argument': conversion from 'double' to '_Ty', possible loss of data
+          with
+          [
+              _Ty=bdrc_size_t
+          ]
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\BrainDynamicsLearner\BDReservoirComputer.cpp(13,62): warning C4244: 'argument': conversion from 'double' to '_Ty', possible loss of data
+          with
+          [
+              _Ty=bdrc_size_t
+          ]
+  BDSpikingForceLearner.cpp
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(18,14): error C3856: 'traits': symbol is not a class template
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(18,15): error C2146: syntax error: missing ';' before identifier 'Matrix'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(18,21): error C2143: syntax error: missing ';' before '<'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(18,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(19,1): error C2143: syntax error: missing ';' before '{'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(19,1): error C2447: '{': missing function header (old-style formal list?)
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(179,27): error C2143: syntax error: missing ',' before '<'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(449): message : see reference to class template instantiation 'Eigen::Matrix<_Scalar,_Rows,_Cols,_Options,_MaxRows,_MaxCols>' being compiled
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(185,28): error C2143: syntax error: missing ';' before '<'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(185,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(185,1): error C2238: unexpected token(s) preceding ';'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,22): error C2653: 'Base': is not a class or namespace name
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,5): error C2144: syntax error: 'int' should be preceded by ';'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,1): warning C4183: 'EIGEN_DENSE_PUBLIC_INTERFACE': missing return type; assumed to be a member function returning 'int'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(191,40): error C3646: 'PlainObject': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(193,11): error C2653: 'Base': is not a class or namespace name
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(194,11): error C2653: 'Base': is not a class or namespace name
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(205,5): error C3646: 'EIGEN_STRONG_INLINE': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(205,25): error C3646: 'Matrix': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(205,31): error C2143: syntax error: missing ';' before '&'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(205,1): error C4430: missing type specifier - int assumed. Note: C++ does not support default-int
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(206,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(222,5): error C2061: syntax error: identifier 'EIGEN_STRONG_INLINE'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(223,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(235,5): error C2061: syntax error: identifier 'EIGEN_STRONG_INLINE'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(236,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(242,5): error C2061: syntax error: identifier 'EIGEN_STRONG_INLINE'
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(243,1): error C2334: unexpected token(s) preceding '{'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(257,23): error C3646: 'EIGEN_STRONG_INLINE': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(258,5): error C3646: 'Matrix': unknown override specifier
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(258,11): error C2988: unrecognizable template declaration/definition
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(258,11): error C2059: syntax error: '('
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(258,1): error C2334: unexpected token(s) preceding ':'; skipping apparent function body
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\Matrix.h(449,1): fatal error C1903: unable to recover from previous error(s); stopping compilation
+  BrainDynamicsLearner.cpp
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\arch\Default\Half.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (950). Save the file in Unicode format to prevent data loss
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\arch\Default\BFloat16.h(1,1): warning C4819: The file contains a character that cannot be represented in the current code page (950). Save the file in Unicode format to prevent data loss
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\arch\Default\GenericPacketMathFunctions.h(676,1): warning C4819: The file contains a character that cannot be represented in the current code page (950). Save the file in Unicode format to prevent data loss
+C:\Users\agcraig\Documents\GitHub\FORCETrainingWithBrainData\BrainDynamicsLearner\eigen-3.4.0\Eigen\src\Core\products\GeneralBlockPanelKernel.h(2063,1): warning C4819: The file contains a character that cannot be represented in the current code page (950). Save the file in Unicode format to prevent data loss
+  Generating Code...
