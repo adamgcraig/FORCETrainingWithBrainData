@@ -11,8 +11,26 @@ BDSpikingForceLearner::BDSpikingForceLearner(BDVector prediction_scaling_factors
     // std::cout << "prediction input weights: " << prediction_input_weights << std::endl;
     context_input_weights = Eigen::MatrixXd::Random(num_neurons, num_context_cues).array() * WE2.transpose().replicate(num_neurons, 1).array();
     // std::cout << "context input weights: " << context_input_weights << std::endl;
-    reservoir_weights = G * ( Eigen::MatrixXd::Random(num_neurons, num_neurons).array().abs() < p).select(Eigen::MatrixXd::Random(num_neurons, num_neurons), Eigen::MatrixXd::Constant(num_neurons, num_neurons, 0.0));
-    std::cout << "reservoir weights: " << reservoir_weights << std::endl;
+    std::default_random_engine generator;
+    bd_float_t reservoir_std_dev = G / ( p * std::sqrt((bd_float_t) num_neurons) );
+    std::normal_distribution<bd_float_t> distribution(0.0, reservoir_std_dev);
+    bd_size_t num_reservoir_weights = num_neurons * num_neurons;
+    bd_float_t *norm_weights_array = new bd_float_t[num_reservoir_weights];
+    for (size_t i = 0; i < num_reservoir_weights; i++)
+    {
+        norm_weights_array[i] = distribution(generator);
+    }
+    BDMatrix norm_weights = Eigen::Map<BDMatrix>(norm_weights_array, num_neurons, num_neurons);
+    BDMatrix zero_weights = Eigen::MatrixXd::Constant(num_neurons, num_neurons, 0.0);
+    reservoir_weights = ( Eigen::MatrixXd::Random(num_neurons, num_neurons).array().abs() < p).select(norm_weights, zero_weights);
+    // std::cout << "reservoir weights: " << reservoir_weights << std::endl;
+    // bd_float_t norm_weight_mean = norm_weights.mean();
+    // BDMatrix nw_diff_from_mean = norm_weights.array() - norm_weight_mean;
+    // BDMatrix nw_diff_from_mean_sq = nw_diff_from_mean.array() * nw_diff_from_mean.array();
+    // bd_float_t norm_weight_variance = nw_diff_from_mean_sq.sum() / ((bd_float_t) nw_diff_from_mean_sq.size() - 1.0);
+    // Eigen::Matrix<bool, Eigen::Dynamic, Eigen::Dynamic> is_non_0 = reservoir_weights.array() != 0;
+    // bd_float_t nw_fraction_non_0 = is_non_0.cast<bd_float_t>().sum() / (bd_float_t) is_non_0.size();
+    // std::cout << "reservoir weight mean: " << norm_weight_mean << ", variance: " << norm_weight_variance << ", fraction non-0: " << nw_fraction_non_0 << std::endl;
     // Neuron state vectors
     IPSC = Eigen::VectorXd::Constant(num_neurons, 0.0);
     prediction = Eigen::VectorXd::Constant(num_predictions, 0.0);
@@ -29,7 +47,7 @@ BDSpikingForceLearner::BDSpikingForceLearner(BDVector prediction_scaling_factors
 void BDSpikingForceLearner::neuronSimStep(BDVector context)
 {
     BDMatrix weighted_input = prediction_input_weights * prediction + context_input_weights * context;
-    std::cout << "weighted input: " << weighted_input.transpose() << std::endl;
+    // std::cout << "weighted input: " << weighted_input.transpose() << std::endl;
     // After this, we are mostly in element-wise operation mode, as we update the state of each neuron independently.
     BDArray I = IPSC + weighted_input.array() + BIAS; // IPSC + E1 * z1 + E2_z2_qq + BIAS;
     // std::cout << "I: " << I.transpose() << std::endl;
@@ -37,20 +55,20 @@ void BDSpikingForceLearner::neuronSimStep(BDVector context)
     v += dt * ( ff * (v_-vr) * (v_-vt) - u + I ) / C; // v(t) = v(t - 1) + dt * v'(t-1)
     u += dt * (  a * ( b * (v_-vr) - u )  ); // same with u, the v_ term makes it so that the integration of u uses v(t - 1), instead of the updated v(t)
     Eigen::Array<bool,Eigen::Dynamic,1> is_spike = v >= vpeak;
-    std::cout << "is_spike: " << is_spike.transpose() << std::endl;
+    // std::cout << "is_spike: " << is_spike.transpose() << std::endl;
     v = is_spike.select(vreset,v); // implements v = c if v > vpeak add 0 if false, add c - v if true, v + c - v = c
     // std::cout << "v: " << v.transpose() << std::endl;
     u = is_spike.select(u+d,u); // implements set u to u + d if v > vpeak, component by component.
     // std::cout << "u: " << u.transpose() << std::endl;
     // We briefly work in matrix operation mode here when transmitting spikes between neurons.
-    BDVector is_spike_double = (BDVector) is_spike.cast<double>();
+    BDVector is_spike_double = (BDVector) is_spike.cast<bd_float_t>();
     BDVector JD = reservoir_weights * is_spike_double; // Compute the increase in current due to spiking.
-                                                           // Just implement the double-exponential synapse so that we do not need an if-statement every step.
+    // Just implement the double-exponential synapse so that we do not need an if-statement every step.
     // std::cout << "JD: " << JD.transpose() << std::endl;
     IPSC = exp_neg_dt * IPSC + dt * h;
     // std::cout << "IPSC: " << IPSC.transpose() << std::endl;
     r = exp_neg_dt * r.array() + dt * hr;
-    std::cout << "r: " << r.transpose() << std::endl;
+    // std::cout << "r: " << r.transpose() << std::endl;
     h = exp_neg_dt * h + one_over_tr_td * JD.array();
     // std::cout << "h: " << h.transpose() << std::endl;
     hr = exp_neg_dt * hr + one_over_tr_td * is_spike_double.array();
@@ -59,10 +77,10 @@ void BDSpikingForceLearner::neuronSimStep(BDVector context)
     prediction = output_weights * r;
 }
 
-void BDSpikingForceLearner::recursiveLeastSquaresStep(BDVector correct_result)
+void BDSpikingForceLearner::recursiveLeastSquaresStep(BDVector correct_output)
 {
-    BDVector error_value = prediction - correct_result;
-    std::cout << "error_value: " << error_value.transpose() << std::endl;
+    BDVector error_value = prediction - correct_output;
+    // std::cout << "error_value: " << error_value.transpose() << std::endl;
     BDVector cd1 = Pinv1 * r;
     // std::cout << "cd1: " << cd1.transpose() << std::endl;
     Eigen::RowVectorXd cd1_t = cd1.transpose();

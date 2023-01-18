@@ -1,5 +1,8 @@
 // BrainDynamicsLearner.cpp : This file contains the 'main' function. Program execution begins and ends there.
-// FORCE-train a spiking NN on fMRI data.
+// written by Adam Craig at the HKBU Center for Nonlinear Studies
+// created 2023-01-16
+// last updated 2023-01-18
+// This program uses the FORCE training method to teach a reservoir computing model to replicate fMRI time series.
 // Adapted from
 // https://github.com/ModelDBRepository/190565/blob/master/CODE%20FOR%20FIGURE%205%20(USER%20SUPPLIED%20SUPERVISOR)/IZFORCEMOVIE.m
 // Nicola, W., & Clopath, C. (2017).
@@ -11,53 +14,114 @@
 #include <Eigen/Dense>
 #include "BDSpikingForceLearner.h"
 
+BDMatrix load_fmri_data(std::string file_name);
+BDMatrix generate_hdts_context(bd_size_t num_dimensions, bd_size_t num_time_points, bd_float_t pulse_amplitude, bd_float_t decay_rate);
+
 int main()
 {
-    const size_t num_brain_areas = 360;
-    const size_t bytes_per_time_point = num_brain_areas * 64/8;// We store the values in 64-bit floating point numbers.
-    char *time_point_bytes = new char [bytes_per_time_point];
-    double* time_point = NULL;
-    std::ifstream fmri_file;
-    BDVector input_factors = Eigen::VectorXd::Constant(num_brain_areas, 400.0);
-    const bd_size_t num_context_cues = 5;
-    Eigen::Matrix<double,num_context_cues,1> context_factors = { 0.1, 1.0, 10.0, 100.0, 1000.0 };
-    BDVector current_fmri_activity(num_brain_areas);
-    BDSpikingForceLearner fmriLearner(input_factors, context_factors);
-    BDVector prediction;
-    Eigen::VectorXd context;
     std::cout << "This is BrainDynamicsLearner main.\n";
-    fmri_file.open("C:\\Users\\agcraig\\Documents\\HCP_data\\fMRI_binaries\\ts_100206_1_LR.bin", std::ios::binary);
-    if (!fmri_file.is_open())
+    const bd_size_t reps_per_sequence = 10;
+    const bd_size_t sim_steps_per_data_step = 1;// 7000 / 4; // Delta-t of the simulation is 0.04 ms. Delta-t of the actual data is 700 ms.
+    // Load the fMRI time series.
+    BDMatrix fmri_activity = load_fmri_data("C:\\Users\\agcraig\\Documents\\HCP_data\\fMRI_binaries\\ts_100206_1_LR.bin");
+    // std::cout << "fmri_activity: \n" << fmri_activity << std::endl;
+    bd_size_t num_brain_areas = fmri_activity.rows();
+    bd_size_t num_data_times = fmri_activity.cols();
+    BDVector current_fmri_activity(num_brain_areas);
+    const bd_size_t num_context_dimensions = 24;
+    // Generate the HDTS context signal.
+    BDMatrix context = generate_hdts_context(num_context_dimensions, num_data_times, 1.0, 0.1);
+    // std::cout << "hdts_context: \n" << context << std::endl;
+    BDVector current_context(num_context_dimensions);
+    // Initialize the reservoir computing model.
+    BDVector prediction_factors = Eigen::VectorXd::Constant(num_brain_areas, 400.0);
+    BDVector context_factors = Eigen::VectorXd::Constant(num_context_dimensions, 4000.0);
+    BDSpikingForceLearner fmriLearner(prediction_factors, context_factors);
+    BDVector prediction;
+    BDVector errors_for_sim_step;
+    BDMatrix errors_for_data_step = Eigen::MatrixXd::Constant(num_brain_areas, sim_steps_per_data_step, NAN);
+    BDMatrix errors_for_repetition = Eigen::MatrixXd::Constant(num_brain_areas, num_data_times * sim_steps_per_data_step, NAN);
+    bd_size_t index_into_repetition;
+    bd_float_t rmse;
+    // Train the model.
+    for (size_t rep_index = 0; rep_index < reps_per_sequence; rep_index++)
     {
-        std::cout << "failed to open fMRI data file.";
-        return 1;
+        index_into_repetition = 0;
+        for (size_t data_step_index = 0; data_step_index < num_data_times; data_step_index++)
+        {
+            current_fmri_activity = fmri_activity.col(data_step_index);
+            current_context = context.col(data_step_index);
+            for (size_t sim_step_index = 0; sim_step_index < sim_steps_per_data_step; sim_step_index++)
+            {
+                fmriLearner.neuronSimStep(current_context);
+                fmriLearner.recursiveLeastSquaresStep(current_fmri_activity);
+                prediction = fmriLearner.getPrediction();
+                errors_for_sim_step = prediction - current_fmri_activity;
+                errors_for_data_step.col(sim_step_index) = errors_for_sim_step;
+                errors_for_repetition.col(index_into_repetition) = errors_for_sim_step;
+                index_into_repetition++;
+                // rmse = std::sqrt(errors_for_sim_step.array().square().mean());
+                // std::cout << "repetition " << rep_index << ",\t data step " << data_step_index << ",\t sim step " << sim_step_index << ",\t RMSE = " << rmse << std::endl;
+            }
+            // rmse = std::sqrt(errors_for_data_step.array().square().mean());
+            // std::cout << "repetition " << rep_index << ",\t data step " << data_step_index << ",\t RMSE = " << rmse << std::endl;
+        }
+        rmse = std::sqrt(errors_for_repetition.array().square().mean());
+        std::cout << "repetition " << rep_index << ",\t RMSE = " << rmse << std::endl;
     }
-    size_t num_time_points = 0;
-    while ( fmri_file.good() && (num_time_points < 10) )
+}
+
+BDMatrix load_fmri_data(std::string file_name) {
+    BDMatrix fmri_data;
+    const bd_size_t num_brain_areas = 360;
+    std::streampos size;
+    bd_size_t num_floats;
+    bd_size_t num_time_points;
+    char* memblock;
+    std::ifstream file(file_name, std::ios::in | std::ios::binary | std::ios::ate);
+    if (file.is_open())
     {
-        fmri_file.read(time_point_bytes, bytes_per_time_point);
-        time_point = (double*)time_point_bytes;
-        current_fmri_activity = Eigen::Map<Eigen::RowVectorXd>(time_point, num_brain_areas);
-        context = Eigen::VectorXd::Random(num_context_cues);
-        fmriLearner.neuronSimStep(context);
-        prediction = fmriLearner.getPrediction();
-        fmriLearner.recursiveLeastSquaresStep(current_fmri_activity);
-        num_time_points++;
-        std::cout << num_time_points << "\n predicted:\t" << prediction.transpose() << "\n real:\t" << current_fmri_activity.transpose() << "\n";
+        std::cout << "reading from file " << file_name << std::endl;
+        size = file.tellg();
+        num_floats = size / 8;// 8 bytes per 64-bit float
+        num_time_points = num_floats / num_brain_areas;
+        std::cout << "detected " << num_floats << " values, which we will try to read into a " << num_brain_areas << "x" << num_time_points << " matrix.\n";
+        memblock = new char[size];
+        file.seekg(0, std::ios::beg);
+        file.read(memblock, size);
+        file.close();
+        std::cout << "finished reading\n";
+        fmri_data = Eigen::MatrixXd::Map((bd_float_t*)memblock, num_brain_areas, num_time_points);
+        delete[] memblock;
     }
-    if ( fmri_file.fail() )
+    else
     {
-        std::cout << "read failed\n";
+        std::cout << "Unable to open file " << file_name << std::endl;
+        fmri_data = Eigen::MatrixXd::Constant(1, 1, NAN);
     }
-    if ( fmri_file.eof() )
+    return fmri_data;
+}
+
+BDMatrix generate_hdts_context(bd_size_t num_dimensions, bd_size_t num_time_points, bd_float_t pulse_amplitude, bd_float_t decay_rate)
+{
+    BDMatrix hdts = Eigen::MatrixXd::Constant(num_dimensions, num_time_points, 0.0);
+    BDVector current_hdts = Eigen::VectorXd::Constant(num_dimensions, 0.0);
+    bd_size_t current_spike_location = 0;
+    current_hdts(0) = pulse_amplitude;
+    hdts.col(0) = current_hdts;
+    bd_float_t multiplier = 1 - decay_rate;
+    bd_size_t time_between_spikes = num_time_points / num_dimensions;
+    for (size_t t = 1; t < num_time_points; t++)
     {
-        std::cout << "reached end of file\n";
+        current_hdts *= multiplier;
+        if (t % time_between_spikes == 0)
+        {
+            current_spike_location++;
+            current_hdts[current_spike_location] = pulse_amplitude;
+        }
+        hdts.col(t) = current_hdts;
     }
-    fmri_file.close();
-    // Eigen::MatrixXd m1 = Eigen::MatrixXd::Random(4, 2);
-    // Eigen::MatrixXd m2 = Eigen::MatrixXd::Random(2, 3);
-    // Eigen::MatrixXd m3 = m1 * m2;
-    // std::cout << "m1 * m2:\n" << m3 << std::endl;
+    return hdts;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
