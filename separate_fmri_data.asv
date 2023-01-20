@@ -1,0 +1,5 @@
+% Write the FC data from Daniel to binaries.
+% It is tempting to rescale the amplitudes in the saved file
+% so that we do not need to do it each time we load the data,
+% but we need to make sure we include this in documentation accompanying the data.
+% It may also be more efficient to save single brain area time series to separate files.

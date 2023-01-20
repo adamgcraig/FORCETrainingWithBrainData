@@ -15,22 +15,25 @@
 #include "BDSpikingForceLearner.h"
 
 BDMatrix load_fmri_data(std::string file_name);
-BDMatrix generate_hdts_context(bd_size_t num_dimensions, bd_size_t num_time_points, bd_float_t pulse_amplitude, bd_float_t decay_rate);
+BDMatrix generate_sinusoid_hdts(bd_size_t num_dimensions, bd_size_t num_time_points);
+BDMatrix generate_decay_hdts(bd_size_t num_dimensions, bd_size_t num_time_points, bd_float_t pulse_amplitude, bd_float_t decay_rate);
 
 int main()
 {
     std::cout << "This is BrainDynamicsLearner main.\n";
-    const bd_size_t reps_per_sequence = 10;
-    const bd_size_t sim_steps_per_data_step = 1;// 7000 / 4; // Delta-t of the simulation is 0.04 ms. Delta-t of the actual data is 700 ms.
-    // Load the fMRI time series.
-    BDMatrix fmri_activity = load_fmri_data("C:\\Users\\agcraig\\Documents\\HCP_data\\fMRI_binaries\\ts_100206_1_LR.bin");
+    const bd_size_t reps_per_sequence = 100;
+    const bd_size_t sim_steps_per_data_step = 10;// 7000 / 4; // Delta-t of the simulation is 0.04 ms. Delta-t of the actual data is 700 ms.
+    // Load the fMRI time series and divide all values by 100.
+    BDMatrix fmri_activity = 0.001 * load_fmri_data("C:\\Users\\agcraig\\Documents\\HCP_data\\fMRI_binaries\\ts_100206_1_LR.bin");
+    bd_float_t root_mean_squared_activity = std::sqrt(fmri_activity.array().square().mean());
+    std::cout << "root mean squared fMRI activity = " << root_mean_squared_activity << std::endl;
     // std::cout << "fmri_activity: \n" << fmri_activity << std::endl;
     bd_size_t num_brain_areas = fmri_activity.rows();
     bd_size_t num_data_times = fmri_activity.cols();
     BDVector current_fmri_activity(num_brain_areas);
     const bd_size_t num_context_dimensions = 24;
     // Generate the HDTS context signal.
-    BDMatrix context = generate_hdts_context(num_context_dimensions, num_data_times, 1.0, 0.1);
+    BDMatrix context = generate_sinusoid_hdts(num_context_dimensions, num_data_times);
     // std::cout << "hdts_context: \n" << context << std::endl;
     BDVector current_context(num_context_dimensions);
     // Initialize the reservoir computing model.
@@ -102,7 +105,30 @@ BDMatrix load_fmri_data(std::string file_name) {
     return fmri_data;
 }
 
-BDMatrix generate_hdts_context(bd_size_t num_dimensions, bd_size_t num_time_points, bd_float_t pulse_amplitude, bd_float_t decay_rate)
+BDMatrix interpolate_fmri_data(BDMatrix fmri_data, bd_float_t out_points_per_in_point)
+{
+    BDMatrix result = fmri_data;
+    return result;
+}
+
+BDMatrix generate_sinusoid_hdts(bd_size_t num_dimensions, bd_size_t num_time_points)
+{
+    bd_size_t sinusoid_length = num_time_points / num_dimensions;
+    // Make the basic half-sinusoid shape.
+    Eigen::RowVectorXd sinusoid = Eigen::RowVectorXd::LinSpaced(sinusoid_length, 0.0, EIGEN_PI).array().sin();
+    // Make a matrix of 0s.
+    BDMatrix hdts = Eigen::MatrixXd::Constant(num_dimensions, num_time_points, 0.0);
+    // Copy the half-sinusoid shape into each dimension (column) at the time point just after the one in the previous dimension ends.
+    bd_size_t start_col = 0;
+    for (size_t dimension_index = 0; dimension_index < num_dimensions; dimension_index++)
+    {
+        hdts(dimension_index, Eigen::seqN(start_col, sinusoid_length)) = sinusoid;
+        start_col += sinusoid_length;
+    }
+    return hdts;
+}
+
+BDMatrix generate_decay_hdts(bd_size_t num_dimensions, bd_size_t num_time_points, bd_float_t pulse_amplitude, bd_float_t decay_rate)
 {
     BDMatrix hdts = Eigen::MatrixXd::Constant(num_dimensions, num_time_points, 0.0);
     BDVector current_hdts = Eigen::VectorXd::Constant(num_dimensions, 0.0);
