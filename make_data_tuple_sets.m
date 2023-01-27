@@ -178,7 +178,7 @@ sc_data_all = [
     sc_data_all_rl sc_data_all_rr
     ];
 num_brain_areas = size(sc_data_all,1);
-[~, brain_area_sc_rankings] = sort( sc_data_all, 1, 'descend' );
+[~, brain_area_sc_rankings] = sort(sc_data_all, 1, 'descend');
 for subject_index = 1:num_subjects
     subject_id = subject_ids(subject_index);
     for brain_area_index = 1:num_brain_areas
@@ -187,6 +187,16 @@ for subject_index = 1:num_subjects
         fwrite( scr_file_id, brain_area_sc_rankings(:,brain_area_index,subject_index), 'uint32' );
         fclose(scr_file_id);
     end
+end
+
+%% Create an averaged SC matrix, and convert it to ranks.
+mean_sc = mean(sc_data_all,3);
+[~, mean_sc_rankings] = sort(mean_sc, 1, 'descend');
+for brain_area_index = 1:num_brain_areas
+    sc_rank_file = sprintf('C:\\Users\\agcraig\\Documents\\HCP_data\\sc_rank_binaries\\sc_rank_mean_%u.bin',brain_area_index);
+    scr_file_id = fopen(sc_rank_file,'w');
+    fwrite( scr_file_id, mean_sc_rankings(:,brain_area_index), 'uint32' );
+    fclose(scr_file_id);
 end
 
 %% Convert the anatomical data into individual binary files.

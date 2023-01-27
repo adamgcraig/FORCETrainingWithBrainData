@@ -11,35 +11,74 @@
 
 #include <iostream>
 #include <fstream>
-#include <Eigen/Dense>
-#include "BDSpikingForceLearner.h"
+// #include <Eigen/Dense>
+#include <boost/program_options.hpp>
+// #include "BDSpikingForceLearner.h"
 
+namespace prog_opts = boost::program_options;
+
+// void one_area_test();
+
+// Just do a basic test where the reservoir computer learns all brain areas of a single fMRI time series over multiple iterations. 
+// Prints out the root-mean-squared-error of each pass of the full time series.
+// void all_areas_test(bd_size_t reps_per_sequence, bd_size_t sim_steps_per_data_step, bd_size_t num_context_dimensions, bd_float_t data_scaling_factor, bd_float_t reservoir_factor, bd_float_t Q_prediction, bd_float_t Q_context);
+
+/*
 BDMatrix load_fmri_data(std::string file_name);
 BDMatrix generate_sinusoid_hdts(bd_size_t num_dimensions, bd_size_t num_time_points);
 BDMatrix generate_decay_hdts(bd_size_t num_dimensions, bd_size_t num_time_points, bd_float_t pulse_amplitude, bd_float_t decay_rate);
+*/
 
-int main()
+int main(int argc, char* argv[])
+{
+    prog_opts::options_description desc("Allowed options");
+    desc.add_options()
+        ("help", "produce help message")
+        ("compression", prog_opts::value<int>(), "set compression level")
+        ;
+    prog_opts::variables_map vm;
+    prog_opts::store(prog_opts::parse_command_line(argc, argv, desc), vm);
+    prog_opts::notify(vm);
+    if (vm.count("help"))
+    {
+        std::cout << desc << "\n";
+        return 1;
+    }
+    if (vm.count("compression")) {
+        std::cout << "Compression level was set to " << vm["compression"].as<int>() << ".\n";
+    }
+    else
+    {
+        std::cout << "Compression level was not set.\n";
+    }
+    // one_area_test();
+    // all_areas_test(20, 1000, 75, 0.001, 5000, 4000, 4000);
+}
+
+// void one_area_test()
+// {
+// }
+/*
+void all_areas_test(bd_size_t reps_per_sequence, bd_size_t sim_steps_per_data_step, bd_size_t num_context_dimensions, bd_float_t data_scaling_factor, bd_float_t reservoir_factor, bd_float_t Q_prediction, bd_float_t Q_context)
 {
     std::cout << "This is BrainDynamicsLearner main.\n";
-    const bd_size_t reps_per_sequence = 100;
-    const bd_size_t sim_steps_per_data_step = 10;// 7000 / 4; // Delta-t of the simulation is 0.04 ms. Delta-t of the actual data is 700 ms.
+    // const bd_size_t sim_steps_per_data_step = 7000 / 4; // Delta-t of the simulation is 0.04 ms. Delta-t of the actual data is 700 ms.
     // Load the fMRI time series and divide all values by 100.
-    BDMatrix fmri_activity = 0.001 * load_fmri_data("C:\\Users\\agcraig\\Documents\\HCP_data\\fMRI_binaries\\ts_100206_1_LR.bin");
+    BDMatrix fmri_activity = data_scaling_factor * load_fmri_data("C:\\Users\\agcraig\\Documents\\HCP_data\\fMRI_binaries\\ts_100206_1_LR.bin");
     bd_float_t root_mean_squared_activity = std::sqrt(fmri_activity.array().square().mean());
     std::cout << "root mean squared fMRI activity = " << root_mean_squared_activity << std::endl;
     // std::cout << "fmri_activity: \n" << fmri_activity << std::endl;
     bd_size_t num_brain_areas = fmri_activity.rows();
     bd_size_t num_data_times = fmri_activity.cols();
     BDVector current_fmri_activity(num_brain_areas);
-    const bd_size_t num_context_dimensions = 24;
     // Generate the HDTS context signal.
     BDMatrix context = generate_sinusoid_hdts(num_context_dimensions, num_data_times);
     // std::cout << "hdts_context: \n" << context << std::endl;
     BDVector current_context(num_context_dimensions);
     // Initialize the reservoir computing model.
-    BDVector prediction_factors = Eigen::VectorXd::Constant(num_brain_areas, 400.0);
-    BDVector context_factors = Eigen::VectorXd::Constant(num_context_dimensions, 4000.0);
-    BDSpikingForceLearner fmriLearner(prediction_factors, context_factors);
+    BDVector prediction_factors = Eigen::VectorXd::Constant(num_brain_areas, Q_prediction);
+    BDVector context_factors = Eigen::VectorXd::Constant(num_context_dimensions, Q_context);
+    BDSpikingForceLearner fmriLearner(reservoir_factor, prediction_factors, context_factors);
     BDVector prediction;
     BDVector errors_for_sim_step;
     BDMatrix errors_for_data_step = Eigen::MatrixXd::Constant(num_brain_areas, sim_steps_per_data_step, NAN);
@@ -54,10 +93,10 @@ int main()
         {
             current_fmri_activity = fmri_activity.col(data_step_index);
             current_context = context.col(data_step_index);
+            fmriLearner.doNSimStepsAnd1LeastSquaresStep(sim_steps_per_data_step, current_context, current_fmri_activity);
             for (size_t sim_step_index = 0; sim_step_index < sim_steps_per_data_step; sim_step_index++)
             {
                 fmriLearner.neuronSimStep(current_context);
-                fmriLearner.recursiveLeastSquaresStep(current_fmri_activity);
                 prediction = fmriLearner.getPrediction();
                 errors_for_sim_step = prediction - current_fmri_activity;
                 errors_for_data_step.col(sim_step_index) = errors_for_sim_step;
@@ -66,6 +105,9 @@ int main()
                 // rmse = std::sqrt(errors_for_sim_step.array().square().mean());
                 // std::cout << "repetition " << rep_index << ",\t data step " << data_step_index << ",\t sim step " << sim_step_index << ",\t RMSE = " << rmse << std::endl;
             }
+            BDVector data_step_mean_error = errors_for_data_step.rowwise().mean();
+            fmriLearner.recursiveLeastSquaresStepForError(data_step_mean_error);
+            // fmriLearner.recursiveLeastSquaresStep(current_fmri_activity);
             // rmse = std::sqrt(errors_for_data_step.array().square().mean());
             // std::cout << "repetition " << rep_index << ",\t data step " << data_step_index << ",\t RMSE = " << rmse << std::endl;
         }
@@ -149,7 +191,7 @@ BDMatrix generate_decay_hdts(bd_size_t num_dimensions, bd_size_t num_time_points
     }
     return hdts;
 }
-
+*/
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
 // Debug program: F5 or Debug > Start Debugging menu
 

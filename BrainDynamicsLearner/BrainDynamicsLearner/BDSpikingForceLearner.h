@@ -25,7 +25,7 @@ protected:
     bd_float_t v_threshold = -40.0;// mV, threshold v (when b=0 and I_bias=0)
     bd_float_t a = 0.002;// ms^-1, reciprocal of u time constant
     // If we set b to something non-0, go back into the code and swap back in the version of the u and v updates that uses b.
-    // bd_float_t b = 0.0;// nS, sensitivity of u to subthreshold oscillations of v
+    bd_float_t b = 0.0;// nS, sensitivity of u to subthreshold oscillations of v
     bd_float_t d = 100.0;// pA, incremental increase in u after each spike
     bd_float_t tau_d = 20.0;// ms, synaptic decay time
     bd_float_t tau_r = 2.0;// ms, synaptic rise time
@@ -38,7 +38,7 @@ protected:
     // Network property constants
     bd_size_t num_neurons = 1000;// number of neurons in reservoir network
     bd_float_t p = 0.1;// connection density of reservoir network
-    bd_float_t G = 5000;// global weighting factor of reservoir connections
+    bd_float_t G;// original default = 5000, global weighting factor of reservoir connections
     BDMatrix reservoir_weights;// static weights of reservoir network
     bd_size_t num_predictions;// dimensionality of time series to learn
     bd_size_t num_context_cues;// dimensionality of context cue input
@@ -59,8 +59,10 @@ protected:
     BDMatrix output_weights;// output weights used to generate prediction from r
     BDVector prediction;// predicted value of the time series.
 public:
-    BDSpikingForceLearner(BDVector prediction_scaling_factors, BDVector context_scaling_factors);
+    BDSpikingForceLearner(bd_float_t reservoir_scaling_factor, BDVector prediction_scaling_factors, BDVector context_scaling_factors);
     void neuronSimStep(BDVector context);
+    void recursiveLeastSquaresStepForError(BDVector error_value);
     void recursiveLeastSquaresStep(BDVector correct_output);
+    void doNSimStepsAnd1LeastSquaresStep(bd_size_t N, BDVector context, BDVector correct_average_output);
     BDVector getPrediction();
 };
